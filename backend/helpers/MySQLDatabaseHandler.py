@@ -70,3 +70,17 @@ class Book(db.Model):
         self.review_score = kwargs.get(review_score)
         self.review_count = kwargs.get(review_count)
 
+    def serialize(self):
+        """
+        Serializes a book object 
+        """
+
+        return {
+            "title": self.title,
+            "descript": self.descript, 
+            "authors": self.authors,
+            "publisher": self.publisher, 
+            "categories": self.categories, 
+            "review_score": self.review_score, 
+            "review_count": self.review_count, 
+        }
