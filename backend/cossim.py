@@ -21,38 +21,43 @@ def preprocess(query, n=3):
      books = [book.simple_serialize() for book in Book.query.all()]
 
      # the labels here are the genres
-     # genre_mappings maps each genre to an index
+     # categories_mappings maps each categories to an index, authors_mappings maps each author(s) to an index, publisher_mappings maps each publisher to an index
 
-     genre_mappings = {}
-     summary_lst = []
-     webtoon_num_to_genre = {}
+     categories_mappings = {}
+     authors_mappings = {}
+     publisher_mappings = {}
+     descript_lst = []
+     book_num_to_mappings = {}
+     # book_num_to_mappings is a dict that maps each book id (generated) to a tuple of categories, authors, publisher
      count = 0
 
-     for webtoon in webtoons:      
+     for book in books:      
 
-          if webtoon['genre'] not in genre_mappings: 
-               genre_mappings[webtoon['genre']] = len(genre_mappings)
+          if book['categories'] not in categories_mappings: 
+               categories_mappings[book['categories']] = len(categories_mappings)
 
-          webtoon_num_to_genre[count] = genre_mappings[webtoon['genre']]
+          book_num_to_mappings[count] = (categories_mappings[book['categories']], authors_mappings[book['authors']], publisher_mappings[book['publisher']])
           count += 1
 
-          summary_lst.append(webtoon["summary"])
+          descript_lst.append(book["descript"])
 
      vectorizer = CountVectorizer(max_df=0.7, min_df=1)
 
-     #vectors is an array where the rows represent webtoon summaries and the columns are words in the corpus
+     #vectors is an array where the rows represent book descripts and the columns are words in the corpus
      #dimension of vectors is 734 x num features
-     vectors = np.array(vectorizer.fit_transform(summary_lst).toarray())
+     vectors = np.array(vectorizer.fit_transform(descript_lst).toarray())
      features = vectorizer.get_feature_names()
 
-     # genre_count gives probability of webtoon in that genre P(label = y)
-     genre_count = np.zeros(len(genre_mappings))
-     for webtoon in webtoons: 
-          index = genre_mappings[webtoon['genre']]
-          genre_count[index] += 1
+     # TODO: implement the below for authors and publishers (already implemented for categories)
 
-     for i in range(len(genre_count)): 
-          genre_count[i] /= len(webtoons)
+     # genre_count gives probability of book in that categories P(label = y)
+     categories_count = np.zeros(len(categories_mappings))
+     for book in books: 
+          index = categories_mappings[books['categories']]
+          categories_count[index] += 1
+
+     for i in range(len(categories_count)): 
+          categories_count[i] /= len(books)
 
 
      #First we implement Add-1 smoothing so that we don't get non-zero probabilities
@@ -62,46 +67,46 @@ def preprocess(query, n=3):
 
      if not os.path.exists('prob.txt'):
           # label_word_prob gives probability of word occuring given genre P(X | Y)
-          label_word_prob = np.zeros((len(genre_mappings), len(vectors[0])))
+          label_word_prob = np.zeros((len(categories_mappings), len(vectors[0])))
 
-          #Now we loop through each of the labels in the corpus and for each of the genres we find the label_word_prob
-          for i in range(len(genre_mappings)):
+          #Now we loop through each of the labels in the corpus and for each of the categories we find the label_word_prob
+          for i in range(len(categories_mappings)):
                for word_num in range(len(vectors[0])):
                     sum = 0 
                     for row in range(len(vectors)):
-                         sum += vectors[row][word_num] if webtoon_num_to_genre[row] == i else 0
+                         sum += vectors[row][word_num] if book_num_to_mappings[row][0] == i else 0
                     label_word_prob[i][word_num] = sum / total_counts[word_num]
           
           pickle.dump(label_word_prob, open("prob.txt", 'wb'))
           
      label_word_prob = pickle.load(open("prob.txt", 'rb'))
 
-     # Now given a query we can iterate through all the genres and see which genre it is most likely to be present in
+     # Now given a query we can iterate through all the categories and see which categories it is most likely to be present in
      query = query.split()
-     total_prob_per_label = np.ones((len(genre_mappings)))
-     for i in range(len(genre_mappings)):
+     total_prob_per_label = np.ones((len(book_num_to_mappings)))
+     for i in range(len(book_num_to_mappings)):
           for word in query: 
                if word in features: 
                     index = features.index(word)
                     total_prob_per_label[i] *= label_word_prob[i][index]
-          total_prob_per_label[i] *= genre_count[i]
+          total_prob_per_label[i] *= categories_count[i]
 
      # most_likely = np.argmax(total_prob_per_label)
      # most_likely_genre = ""
      
      most_likely_n = np.argsort(total_prob_per_label)[::-1]
-     reverse_genre_mappings = {value: key for key, value in genre_mappings.items()}
+     reverse_mappings = {value: key for key, value in book_num_to_mappings.items()}
      
-     top_genres = []
+     top_categories = []
      for idx in most_likely_n:
-          top_genres.append(reverse_genre_mappings[idx])
+          top_categories.append(reverse_mappings[idx])
 
-     # for key, value in genre_mappings.items(): 
+     # for key, value in book_num_to_mappings.items(): 
      #      if value == most_likely: 
-     #           most_likely_genre = key
+     #           most_likely_categories = key
      
      # print(most_likely_genre)
-     return top_genres[:n]
+     return top_categories[:n]
 
 
 def build_inverted_index(msgs):
