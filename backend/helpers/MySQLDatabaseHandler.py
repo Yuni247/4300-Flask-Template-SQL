@@ -45,3 +45,39 @@ class MySQLDatabaseHandler(object):
         self.query_executor(sql_file_data)
         sql_file.close()
 
+# MODELS START HERE
+class Book(db.Model):
+    __tablename__ = "webtoons"
+    title = db.Column(db.String(150), nullable=False)
+    descript = db.Column(db.String(1900), nullable=False)
+    authors = db.Column(db.String(100), nullable=False)
+    publisher = db.Column(db.String(50), nullable=False)
+    categories = db.Column(db.String(50), nullable=False)
+    review_score = db.Column(db.String(15), nullable=False)
+    review_count = db.Column(db.String(15), nullable=False)
+
+
+    def __init__(self, **kwargs):
+        """
+        Initializes a Book object
+        """
+
+        self.webtoon_id = kwargs.get(webtoon_id)
+        self.title = kwargs.get(title)
+        self.genre = kwargs.get(genre)
+        self.thumbnail = kwargs.get(thumbnail)
+        self.summary = kwargs.get(summary)
+        self.episodes = kwargs.get(episodes)
+        self.created_by = kwargs.get(created_by)
+        self.view = kwargs.get(view)
+        self.subscribe = kwargs.get(subscribe)
+        self.grade = kwargs.get(grade)
+        self.released_date = kwargs.get(released_date)
+        self.url = kwargs.get(url)
+        self.cover = kwargs.get(cover)
+        self.likes = kwargs.get(likes)
+        self.written_by = kwargs.get(written_by)
+        self.art_by = kwargs.get(art_by)
+        self.adapted_by = kwargs.get(adapted_by)
+        self.original_work_by = kwargs.get(original_work_by)
+        self.assisted_by = kwargs.get(assisted_by)
