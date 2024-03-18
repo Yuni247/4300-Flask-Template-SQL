@@ -15,6 +15,10 @@ import pickle
 def tokenize(text):
     return [x for x in re.findall(r"[a-z]+", text.lower())]
 
+#TODO: categories and authors sometimes have multiple fields; need to account for that 
+
+#TODO: null fields
+
 
 def preprocess(query, n=3): 
 
@@ -48,7 +52,6 @@ def preprocess(query, n=3):
      vectors = np.array(vectorizer.fit_transform(descript_lst).toarray())
      features = vectorizer.get_feature_names()
 
-     # TODO: implement the below for authors and publisher (already implemented for categories)
 
      # genre_count gives probability of book in that categories P(label = y)
      categories_count, authors_count, publisher_count = np.zeros(len(categories_mappings)), np.zeros(len(authors_mappings)), np.zeros(len(publisher_mappings))
