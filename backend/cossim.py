@@ -1,5 +1,5 @@
-from collections import defaultdict
-from collections import Counter
+from collections import defaultdict, Counter
+from helpers.MySQLDatabaseHandler import Book, MySQLDatabaseHandler, db
 import json
 import math
 import string
@@ -18,7 +18,7 @@ def tokenize(text):
 
 def preprocess(query, n=3): 
 
-     webtoons = [webtoon.simple_serialize() for webtoon in Webtoon.query.all()]
+     books = [book.simple_serialize() for book in Book.query.all()]
 
      # the labels here are the genres
      # genre_mappings maps each genre to an index
